@@ -22,3 +22,15 @@ variable "enable_nat" {
   type        = bool
   default     = false
 }
+
+variable "single_nat" {
+  description = "Usa um único NAT para todas as AZs em vez de um por AZ"
+  type        = bool
+  default     = true
+}
+
+variable "container_ports" {
+  description = "Portas dos containers liberadas do ALB para o ECS"
+  type        = list(number)
+  default     = [3000, 80]
+}

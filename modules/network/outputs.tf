@@ -10,8 +10,21 @@ output "public_subnet_ids" {
   value = aws_subnet.public[*].id
 }
 
-output "private_subnet_ids" {
-  value = aws_subnet.private[*].id
+output "app_subnet_ids" {
+  value = aws_subnet.app[*].id
+}
+
+output "data_subnet_ids" {
+  value = aws_subnet.data[*].id
+}
+
+output "security_group_ids" {
+  value = {
+    alb   = aws_security_group.alb.id
+    ecs   = aws_security_group.ecs.id
+    rds   = aws_security_group.rds.id
+    redis = aws_security_group.redis.id
+  }
 }
 
 output "nat_enabled" {
