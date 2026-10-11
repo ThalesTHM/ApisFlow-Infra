@@ -33,3 +33,19 @@ output "redis_endpoint" {
 output "alerts_topic_arn" {
   value = module.observability.alerts_topic_arn
 }
+
+output "url" {
+  value = module.dns.url != "" ? module.dns.url : (module.alb.dns_name != null ? "http://${module.alb.dns_name}" : null)
+}
+
+output "infra_ci_role_arn" {
+  value = module.iam.infra_ci_role_arn
+}
+
+output "app_subnet_ids" {
+  value = module.network.app_subnet_ids
+}
+
+output "ecs_security_group_id" {
+  value = module.network.security_group_ids.ecs
+}

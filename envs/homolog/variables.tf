@@ -33,6 +33,11 @@ variable "rds_multi_az" {
   default = false
 }
 
+variable "rds_backup_retention_days" {
+  type    = number
+  default = 7
+}
+
 variable "rds_deletion_protection" {
   type    = bool
   default = false
@@ -60,14 +65,14 @@ variable "log_retention_days" {
   default = 14
 }
 
-variable "certificate_arn" {
-  description = "Certificado ACM para HTTPS. Vazio = só HTTP"
+variable "domain_name" {
+  description = "Domínio do ambiente para HTTPS (Route 53 + ACM). Vazio = só HTTP pelo DNS do ALB"
   type        = string
   default     = ""
 }
 
-variable "frontend_origin" {
-  description = "URL pública do frontend (CORS). Vazio = DNS do ALB"
+variable "hosted_zone_name" {
+  description = "Hosted zone existente no Route 53 que contém domain_name"
   type        = string
   default     = ""
 }
@@ -86,4 +91,15 @@ variable "create_github_oidc_provider" {
 variable "github_subjects" {
   description = "Repositórios/branches que podem assumir a role de deploy"
   type        = list(string)
+}
+
+variable "infra_ci_repo" {
+  description = "ORG/REPO da infra; só um ambiente cria a role do pipeline de infra"
+  type        = string
+  default     = ""
+}
+
+variable "state_bucket" {
+  type    = string
+  default = ""
 }

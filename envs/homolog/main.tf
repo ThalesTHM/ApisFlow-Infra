@@ -1,8 +1,8 @@
 data "aws_caller_identity" "current" {}
 
 locals {
-  # Sem domínio próprio, o frontend é servido pelo DNS do ALB.
-  frontend_origin = var.frontend_origin != "" ? var.frontend_origin : (
+  # Ordem: domínio próprio > DNS do ALB > localhost (ambiente desligado).
+  frontend_origin = var.domain_name != "" ? "https://${var.domain_name}" : (
     module.alb.dns_name != null ? "http://${module.alb.dns_name}" : "http://localhost:3001"
   )
 }
@@ -43,18 +43,21 @@ module "iam" {
   ecr_repository_arns         = values(module.ecr.repository_arns)
   create_github_oidc_provider = var.create_github_oidc_provider
   github_subjects             = var.github_subjects
+  infra_ci_repo               = var.infra_ci_repo
+  state_bucket                = var.state_bucket
 }
 
 module "rds" {
   source = "../../modules/rds"
 
-  project             = var.project
-  environment         = var.environment
-  enabled             = var.enabled
-  subnet_ids          = module.network.data_subnet_ids
-  security_group_id   = module.network.security_group_ids.rds
-  multi_az            = var.rds_multi_az
-  deletion_protection = var.rds_deletion_protection
+  project               = var.project
+  environment           = var.environment
+  enabled               = var.enabled
+  subnet_ids            = module.network.data_subnet_ids
+  security_group_id     = module.network.security_group_ids.rds
+  multi_az              = var.rds_multi_az
+  deletion_protection   = var.rds_deletion_protection
+  backup_retention_days = var.rds_backup_retention_days
 }
 
 module "redis" {
@@ -77,33 +80,42 @@ module "alb" {
   vpc_id            = module.network.vpc_id
   public_subnet_ids = module.network.public_subnet_ids
   security_group_id = module.network.security_group_ids.alb
-  certificate_arn   = var.certificate_arn
+  certificate_arn   = module.dns.certificate_arn
+}
+
+module "dns" {
+  source = "../../modules/dns"
+
+  domain_name      = var.domain_name
+  hosted_zone_name = var.hosted_zone_name
+  alb_enabled      = var.enabled
+  alb_dns_name     = module.alb.dns_name
+  alb_zone_id      = module.alb.zone_id
 }
 
 module "ecs" {
   source = "../../modules/ecs"
 
-  project                   = var.project
-  environment               = var.environment
-  enabled                   = var.enabled
-  app_subnet_ids            = module.network.app_subnet_ids
-  security_group_id         = module.network.security_group_ids.ecs
-  task_execution_role_arn   = module.iam.task_execution_role_arn
-  task_role_arn             = module.iam.task_role_arn
-  backend_target_group_arn  = module.alb.backend_target_group_arn
-  frontend_target_group_arn = module.alb.frontend_target_group_arn
-  db_host                   = module.rds.address
-  db_name                   = module.rds.db_name
-  db_secret_arn             = module.rds.master_secret_arn
-  redis_host                = module.redis.primary_endpoint
-  redis_secret_arn          = module.redis.auth_secret_arn
-  files_bucket_name         = module.s3.bucket_name
-  cors_origin               = local.frontend_origin
-  backend_desired_count     = var.desired_count
-  frontend_desired_count    = var.desired_count
-  enable_autoscaling        = var.enable_autoscaling
-  log_retention_days        = var.log_retention_days
-  swagger_enabled           = var.environment != "prod"
+  project                           = var.project
+  environment                       = var.environment
+  enabled                           = var.enabled
+  app_subnet_ids                    = module.network.app_subnet_ids
+  security_group_id                 = module.network.security_group_ids.ecs
+  task_execution_role_arn           = module.iam.task_execution_role_arn
+  task_role_arn                     = module.iam.task_role_arn
+  backend_target_group_arn          = module.alb.backend_target_group_arn
+  frontend_target_group_arn         = module.alb.frontend_target_group_arn
+  database_url_secret_arn           = try(module.rds.secret_arns["database-url"], null)
+  migration_database_url_secret_arn = try(module.rds.secret_arns["migration-database-url"], null)
+  app_db_password_secret_arn        = try(module.rds.secret_arns["app-db-password"], null)
+  redis_url_secret_arn              = module.redis.url_secret_arn
+  files_bucket_name                 = module.s3.bucket_name
+  cors_origin                       = local.frontend_origin
+  backend_desired_count             = var.desired_count
+  frontend_desired_count            = var.desired_count
+  enable_autoscaling                = var.enable_autoscaling
+  log_retention_days                = var.log_retention_days
+  swagger_enabled                   = var.environment != "prod"
 }
 
 module "observability" {
