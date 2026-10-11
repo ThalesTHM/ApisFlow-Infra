@@ -23,3 +23,15 @@ variable "github_subjects" {
   description = "Valores aceitos do claim sub, ex.: repo:ORG/REPO:ref:refs/heads/staging"
   type        = list(string)
 }
+
+variable "infra_ci_repo" {
+  description = "Repositório ORG/REPO da infra; vazio = não cria a role do pipeline de infra"
+  type        = string
+  default     = ""
+}
+
+variable "state_bucket" {
+  description = "Bucket do state, para a role do pipeline de infra fazer o lock"
+  type        = string
+  default     = ""
+}

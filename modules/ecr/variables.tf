@@ -14,7 +14,7 @@ variable "repositories" {
 variable "max_images" {
   description = "Quantidade de imagens mantidas por repositório"
   type        = number
-  default     = 10
+  default     = 20
 }
 
 variable "force_delete" {

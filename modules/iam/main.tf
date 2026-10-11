@@ -34,8 +34,6 @@ data "aws_iam_policy_document" "read_secrets" {
     actions = ["secretsmanager:GetSecretValue"]
     resources = [
       "arn:aws:secretsmanager:${local.region}:${local.account_id}:secret:${var.project}/${var.environment}/*",
-      # Segredo da senha master criado pelo próprio RDS
-      "arn:aws:secretsmanager:${local.region}:${local.account_id}:secret:rds!*",
     ]
   }
 }
@@ -159,4 +157,72 @@ resource "aws_iam_role_policy" "github_deploy" {
   name   = "deploy"
   role   = aws_iam_role.github_deploy.id
   policy = data.aws_iam_policy_document.github_deploy.json
+}
+
+# Role do pipeline do repositório de infraestrutura (fmt, validate e plan).
+# Só leitura da conta, mais o lock do state; o apply continua manual.
+data "aws_iam_policy_document" "infra_ci_assume" {
+  count = var.infra_ci_repo == "" ? 0 : 1
+
+  statement {
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    principals {
+      type        = "Federated"
+      identifiers = [local.github_oidc_arn]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringLike"
+      variable = "token.actions.githubusercontent.com:sub"
+      values = [
+        "repo:${var.infra_ci_repo}:pull_request",
+        "repo:${var.infra_ci_repo}:ref:refs/heads/main",
+      ]
+    }
+  }
+}
+
+resource "aws_iam_role" "infra_ci" {
+  count = var.infra_ci_repo == "" ? 0 : 1
+
+  name               = "${var.project}-infra-ci"
+  assume_role_policy = data.aws_iam_policy_document.infra_ci_assume[0].json
+}
+
+resource "aws_iam_role_policy_attachment" "infra_ci_readonly" {
+  count = var.infra_ci_repo == "" ? 0 : 1
+
+  role       = aws_iam_role.infra_ci[0].name
+  policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
+}
+
+data "aws_iam_policy_document" "infra_ci" {
+  count = var.infra_ci_repo == "" ? 0 : 1
+
+  # Lock nativo do backend S3 (arquivo .tflock)
+  statement {
+    actions   = ["s3:PutObject", "s3:DeleteObject"]
+    resources = ["arn:aws:s3:::${var.state_bucket}/*.tflock"]
+  }
+
+  # O plan relê os segredos que o próprio Terraform criou.
+  statement {
+    actions   = ["secretsmanager:GetSecretValue"]
+    resources = ["arn:aws:secretsmanager:${local.region}:${local.account_id}:secret:${var.project}/*"]
+  }
+}
+
+resource "aws_iam_role_policy" "infra_ci" {
+  count = var.infra_ci_repo == "" ? 0 : 1
+
+  name   = "state-lock-and-secrets"
+  role   = aws_iam_role.infra_ci[0].id
+  policy = data.aws_iam_policy_document.infra_ci[0].json
 }
