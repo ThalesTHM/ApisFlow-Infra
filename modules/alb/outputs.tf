@@ -17,3 +17,7 @@ output "frontend_target_group_arn" {
 output "backend_target_group_arn_suffix" {
   value = one(aws_lb_target_group.backend[*].arn_suffix)
 }
+
+output "zone_id" {
+  value = one(aws_lb.this[*].zone_id)
+}
