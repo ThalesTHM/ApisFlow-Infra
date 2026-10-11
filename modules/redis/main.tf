@@ -30,20 +30,6 @@ resource "random_password" "auth" {
   special = false
 }
 
-resource "aws_secretsmanager_secret" "auth" {
-  count = local.count
-
-  name                    = "${var.project}/${var.environment}/redis-auth-token"
-  recovery_window_in_days = 0
-}
-
-resource "aws_secretsmanager_secret_version" "auth" {
-  count = local.count
-
-  secret_id     = aws_secretsmanager_secret.auth[0].id
-  secret_string = random_password.auth[0].result
-}
-
 resource "aws_elasticache_replication_group" "this" {
   count = local.count
 
@@ -69,4 +55,19 @@ resource "aws_elasticache_replication_group" "this" {
 
   snapshot_retention_limit = var.num_cache_clusters > 1 ? 3 : 0
   apply_immediately        = true
+}
+
+# URL completa (TLS + token) no formato que o cliente ioredis do backend espera.
+resource "aws_secretsmanager_secret" "url" {
+  count = local.count
+
+  name                    = "${var.project}/${var.environment}/redis-url"
+  recovery_window_in_days = 0
+}
+
+resource "aws_secretsmanager_secret_version" "url" {
+  count = local.count
+
+  secret_id     = aws_secretsmanager_secret.url[0].id
+  secret_string = "rediss://:${random_password.auth[0].result}@${aws_elasticache_replication_group.this[0].primary_endpoint_address}:6379"
 }

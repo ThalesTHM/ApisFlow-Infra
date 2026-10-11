@@ -46,6 +46,23 @@ variable "multi_az" {
   default = false
 }
 
+variable "backup_retention_days" {
+  type    = number
+  default = 7
+}
+
+variable "owner_username" {
+  description = "Usuário mestre, dono das tabelas (migrações)"
+  type        = string
+  default     = "app_owner"
+}
+
+variable "app_username" {
+  description = "Papel usado pela aplicação (sem BYPASSRLS)"
+  type        = string
+  default     = "app_user"
+}
+
 variable "deletion_protection" {
   type    = bool
   default = false

@@ -10,11 +10,11 @@ output "db_name" {
   value = var.db_name
 }
 
-output "master_secret_arn" {
-  description = "Segredo (JSON com username/password) da senha master, gerenciado pelo RDS"
-  value       = try(aws_db_instance.this[0].master_user_secret[0].secret_arn, null)
-}
-
 output "instance_id" {
   value = one(aws_db_instance.this[*].identifier)
+}
+
+output "secret_arns" {
+  description = "ARNs dos segredos: database-url, migration-database-url, app-db-password"
+  value       = { for k, s in aws_secretsmanager_secret.db : k => s.arn }
 }
