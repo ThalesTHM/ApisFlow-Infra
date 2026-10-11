@@ -64,22 +64,17 @@ resource "aws_ecs_task_definition" "backend" {
       environment = [
         { name = "NODE_ENV", value = "production" },
         { name = "PORT", value = tostring(var.backend_port) },
-        { name = "DB_HOST", value = var.db_host },
-        { name = "DB_PORT", value = tostring(var.db_port) },
-        { name = "DB_NAME", value = var.db_name },
-        { name = "DB_USER", value = "app_owner" },
-        { name = "REDIS_HOST", value = var.redis_host },
-        { name = "REDIS_PORT", value = "6379" },
-        { name = "REDIS_TLS", value = "true" },
-        { name = "S3_BUCKET", value = var.files_bucket_name },
-        { name = "AWS_REGION", value = data.aws_region.current.name },
+        { name = "JWT_EXPIRES_IN", value = "900" },
         { name = "CORS_ORIGIN", value = var.cors_origin },
         { name = "SWAGGER_ENABLED", value = tostring(var.swagger_enabled) },
+        { name = "S3_BUCKET", value = var.files_bucket_name },
+        { name = "AWS_REGION", value = data.aws_region.current.name },
       ]
 
+      # Injetados pelo ECS a partir do Secrets Manager (task execution role).
       secrets = [
-        { name = "DB_PASSWORD", valueFrom = "${var.db_secret_arn}:password::" },
-        { name = "REDIS_PASSWORD", valueFrom = var.redis_secret_arn },
+        { name = "DATABASE_URL", valueFrom = var.database_url_secret_arn },
+        { name = "REDIS_URL", valueFrom = var.redis_url_secret_arn },
         { name = "JWT_SECRET", valueFrom = aws_secretsmanager_secret.jwt[0].arn },
       ]
 
@@ -89,6 +84,47 @@ resource "aws_ecs_task_definition" "backend" {
           awslogs-group         = aws_cloudwatch_log_group.service["backend"].name
           awslogs-region        = data.aws_region.current.name
           awslogs-stream-prefix = "backend"
+        }
+      }
+    }
+  ])
+}
+
+# Migração do banco como tarefa avulsa (run-task) antes de cada deploy:
+# aplica as migrações com o papel dono e garante o papel app_user.
+resource "aws_ecs_task_definition" "migrate" {
+  count = local.count
+
+  family                   = "${local.name}-migrate"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = 256
+  memory                   = 512
+  execution_role_arn       = var.task_execution_role_arn
+  task_role_arn            = var.task_role_arn
+
+  container_definitions = jsonencode([
+    {
+      name      = "migrate"
+      image     = var.migrate_image
+      essential = true
+      command   = ["sh", "-c", "npx prisma migrate deploy && node scripts/ensure-app-role.js"]
+
+      environment = [
+        { name = "APP_DB_USER", value = "app_user" },
+      ]
+
+      secrets = [
+        { name = "DATABASE_URL", valueFrom = var.migration_database_url_secret_arn },
+        { name = "APP_DB_PASSWORD", valueFrom = var.app_db_password_secret_arn },
+      ]
+
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = aws_cloudwatch_log_group.service["backend"].name
+          awslogs-region        = data.aws_region.current.name
+          awslogs-stream-prefix = "migrate"
         }
       }
     }
@@ -112,6 +148,12 @@ resource "aws_ecs_task_definition" "frontend" {
       image        = var.frontend_image
       essential    = true
       portMappings = [{ containerPort = var.frontend_port, protocol = "tcp" }]
+
+      # Lido pelo entrypoint do Nginx e gravado em /config.js na inicialização,
+      # para a mesma imagem servir qualquer ambiente.
+      environment = [
+        { name = "API_URL", value = var.frontend_api_url },
+      ]
 
       logConfiguration = {
         logDriver = "awslogs"

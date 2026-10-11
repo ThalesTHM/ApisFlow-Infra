@@ -104,34 +104,36 @@ variable "log_retention_days" {
   default = 14
 }
 
-variable "db_host" {
+variable "database_url_secret_arn" {
   type    = string
   default = null
 }
 
-variable "db_port" {
-  type    = number
-  default = 5432
-}
-
-variable "db_name" {
-  type    = string
-  default = "honey_manager"
-}
-
-variable "db_secret_arn" {
+variable "migration_database_url_secret_arn" {
   type    = string
   default = null
 }
 
-variable "redis_host" {
+variable "app_db_password_secret_arn" {
   type    = string
   default = null
 }
 
-variable "redis_secret_arn" {
+variable "redis_url_secret_arn" {
   type    = string
   default = null
+}
+
+variable "migrate_image" {
+  description = "Imagem com o Prisma CLI (estágio build do Dockerfile do backend)"
+  type        = string
+  default     = "public.ecr.aws/docker/library/node:20-alpine"
+}
+
+variable "frontend_api_url" {
+  description = "URL da API vista pelo navegador; relativa porque o ALB serve /api/*"
+  type        = string
+  default     = "/api/v1"
 }
 
 variable "files_bucket_name" {
