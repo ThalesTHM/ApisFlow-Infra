@@ -2,7 +2,7 @@ environment = "homolog"
 vpc_cidr    = "10.10.0.0/16"
 
 # false = nada que cobre por hora (NAT, ALB, RDS, Redis, Fargate, alarmes)
-enabled = false
+enabled = true
 
 single_nat         = true
 redis_nodes        = 1
