@@ -16,7 +16,7 @@ quando `enabled = true` no `terraform.tfvars` do ambiente. Por padrão ficam des
 ## Uso
 
 ```sh
-# 1. State remoto (uma vez)
+# 1. State remoto (uma vez; ver comentário em bootstrap/main.tf)
 cd bootstrap
 terraform init
 terraform apply

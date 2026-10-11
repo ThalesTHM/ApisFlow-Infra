@@ -1,5 +1,6 @@
 # Cria o bucket S3 que guarda o state remoto dos ambientes.
-# Roda uma única vez, com state local (o bucket ainda não existe).
+# Na primeira vez roda com state local (o bucket ainda não existe):
+# comente o bloco backend, aplique e depois migre com -migrate-state.
 
 terraform {
   required_version = ">= 1.10"
@@ -9,6 +10,15 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+  }
+
+  # Depois do primeiro apply, o state do próprio bootstrap foi migrado para o bucket:
+  # terraform init -migrate-state -backend-config="bucket=<state_bucket>"
+  backend "s3" {
+    key          = "bootstrap/terraform.tfstate"
+    region       = "us-east-1"
+    encrypt      = true
+    use_lockfile = true
   }
 }
 
