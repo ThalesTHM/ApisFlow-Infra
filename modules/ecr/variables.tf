@@ -1,0 +1,24 @@
+variable "project" {
+  type = string
+}
+
+variable "environment" {
+  type = string
+}
+
+variable "repositories" {
+  description = "Nomes curtos dos repositórios (ex.: api)"
+  type        = list(string)
+}
+
+variable "max_images" {
+  description = "Quantidade de imagens mantidas por repositório"
+  type        = number
+  default     = 10
+}
+
+variable "force_delete" {
+  description = "Permite destruir o repositório mesmo com imagens"
+  type        = bool
+  default     = false
+}
