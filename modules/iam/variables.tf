@@ -25,7 +25,7 @@ variable "github_subjects" {
 }
 
 variable "infra_ci_repo" {
-  description = "Repositório ORG/REPO da infra; vazio = não cria a role do pipeline de infra"
+  description = "Repositório da infra como aparece no claim sub (ex.: ORG@id/REPO@id); vazio = não cria a role"
   type        = string
   default     = ""
 }

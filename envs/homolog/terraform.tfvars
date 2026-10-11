@@ -14,13 +14,14 @@ rds_backup_retention_days = 7
 # Homologação cria o OIDC provider do GitHub (um por conta) e é aplicada antes de prod.
 # Só jobs no GitHub Environment "homolog" (restrito à branch staging) assumem a role.
 create_github_oidc_provider = true
+# Formato imutável do claim sub (dono@id/repo@id), padrão do GitHub para estes repositórios.
 github_subjects = [
-  "repo:ThalesTHM/ApisFlow-Backend:environment:homolog",
-  "repo:ThalesTHM/ApisFlow-Frontend:environment:homolog",
+  "repo:ThalesTHM@122706248/ApisFlow-Backend@1351686381:environment:homolog",
+  "repo:ThalesTHM@122706248/ApisFlow-Frontend@1351789024:environment:homolog",
 ]
 
 # Role do pipeline do repositório de infra (plan em pull requests); criada só aqui.
-infra_ci_repo = "ThalesTHM/ApisFlow-Infra"
+infra_ci_repo = "ThalesTHM@122706248/ApisFlow-Infra@1414752743"
 state_bucket  = "apisflow-tfstate-227536678259"
 
 # HTTPS com domínio próprio (opcional): exige hosted zone no Route 53.
