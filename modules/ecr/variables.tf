@@ -7,7 +7,7 @@ variable "environment" {
 }
 
 variable "repositories" {
-  description = "Nomes curtos dos repositórios (ex.: api)"
+  description = "Nomes curtos dos repositórios (ex.: backend, frontend)"
   type        = list(string)
 }
 

@@ -21,3 +21,9 @@ variable "enabled" {
   type        = bool
   default     = false
 }
+
+variable "single_nat" {
+  description = "Um único NAT (true) ou um por AZ (false)"
+  type        = bool
+  default     = true
+}
