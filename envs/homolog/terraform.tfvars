@@ -15,6 +15,9 @@ rds_backup_retention_days = 7
 # Senha no Secrets Manager: apisflow/homolog/admin-password
 bootstrap_admin = true
 
+# alert_email (inscrição por e-mail no tópico SNS de alarmes): definido em alerts.auto.tfvars,
+# fora do controle de versão; no CI vem do secret ALERT_EMAIL.
+
 # Homologação cria o OIDC provider do GitHub (um por conta) e é aplicada antes de prod.
 # Só jobs no GitHub Environment "homolog" (restrito à branch staging) assumem a role.
 create_github_oidc_provider = true

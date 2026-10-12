@@ -36,6 +36,9 @@ jobs:
     defaults:
       run:
         working-directory: envs/${{ matrix.env }}
+    env:
+      # E-mail dos alarmes fora do repositório (público); localmente vem de envs/*/alerts.auto.tfvars.
+      TF_VAR_alert_email: ${{ secrets.ALERT_EMAIL }}
     steps:
       - uses: actions/checkout@v7
 
