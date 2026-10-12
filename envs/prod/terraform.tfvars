@@ -2,7 +2,7 @@ environment = "prod"
 vpc_cidr    = "10.20.0.0/16"
 
 # false = nada que cobre por hora (NAT, ALB, RDS, Redis, Fargate, alarmes)
-enabled = true
+enabled = false
 
 single_nat              = false
 rds_multi_az            = true
