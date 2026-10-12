@@ -15,6 +15,11 @@ rds_backup_retention_days = 7
 # Senha no Secrets Manager: apisflow/homolog/admin-password
 bootstrap_admin = true
 
+# Custos da conta: orçamento mensal (o crédito da AWS) com avisos por e-mail em 25%, 50% e 80%
+# do gasto real e em 100% do previsto, e etiquetas Project/Environment ativadas no Cost Explorer.
+monthly_budget_usd = 100
+activate_cost_tags = true
+
 # alert_email (inscrição por e-mail no tópico SNS de alarmes): definido em alerts.auto.tfvars,
 # fora do controle de versão; no CI vem do secret ALERT_EMAIL.
 
