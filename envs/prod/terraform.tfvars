@@ -29,3 +29,6 @@ github_subjects = [
 # Conta admin (organização "admin", admin@admin.com) para demonstração do TCC.
 # Senha no Secrets Manager: apisflow/prod/admin-password
 bootstrap_admin = true
+
+# alert_email (inscrição por e-mail no tópico SNS de alarmes): definido em alerts.auto.tfvars,
+# fora do controle de versão; no CI vem do secret ALERT_EMAIL.
