@@ -2,7 +2,7 @@ environment = "prod"
 vpc_cidr    = "10.20.0.0/16"
 
 # false = nada que cobre por hora (NAT, ALB, RDS, Redis, Fargate, alarmes)
-enabled = false
+enabled = true
 
 single_nat              = false
 rds_multi_az            = true
@@ -25,3 +25,7 @@ github_subjects = [
 # HTTPS com domínio próprio (opcional): exige hosted zone no Route 53.
 # domain_name      = "seudominio.com.br"
 # hosted_zone_name = "seudominio.com.br"
+
+# Conta admin (organização "admin", admin@admin.com) para demonstração do TCC.
+# Senha no Secrets Manager: apisflow/prod/admin-password
+bootstrap_admin = true
