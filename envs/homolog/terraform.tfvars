@@ -2,7 +2,7 @@ environment = "homolog"
 vpc_cidr    = "10.10.0.0/16"
 
 # false = nada que cobre por hora (NAT, ALB, RDS, Redis, Fargate, alarmes)
-enabled = true
+enabled = false
 
 single_nat         = true
 redis_nodes        = 1
@@ -10,6 +10,10 @@ desired_count      = 1
 log_retention_days = 14
 
 rds_backup_retention_days = 7
+
+# Conta admin (organização "admin", admin@admin.com) criada a cada deploy.
+# Senha no Secrets Manager: apisflow/homolog/admin-password
+bootstrap_admin = true
 
 # Homologação cria o OIDC provider do GitHub (um por conta) e é aplicada antes de prod.
 # Só jobs no GitHub Environment "homolog" (restrito à branch staging) assumem a role.

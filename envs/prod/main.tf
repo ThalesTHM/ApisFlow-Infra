@@ -116,6 +116,7 @@ module "ecs" {
   enable_autoscaling                = var.enable_autoscaling
   log_retention_days                = var.log_retention_days
   swagger_enabled                   = var.environment != "prod"
+  bootstrap_admin                   = var.bootstrap_admin
 }
 
 module "observability" {

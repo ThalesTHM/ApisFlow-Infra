@@ -43,6 +43,29 @@ resource "aws_secretsmanager_secret_version" "jwt" {
   secret_string = random_password.jwt[0].result
 }
 
+# Senha da conta admin criada pela migração (só homologação). Fica fora do
+# "enabled" para continuar a mesma quando o ambiente é desligado e religado.
+resource "random_password" "admin" {
+  count = var.bootstrap_admin ? 1 : 0
+
+  length  = 20
+  special = false
+}
+
+resource "aws_secretsmanager_secret" "admin" {
+  count = var.bootstrap_admin ? 1 : 0
+
+  name                    = "${var.project}/${var.environment}/admin-password"
+  recovery_window_in_days = 0
+}
+
+resource "aws_secretsmanager_secret_version" "admin" {
+  count = var.bootstrap_admin ? 1 : 0
+
+  secret_id     = aws_secretsmanager_secret.admin[0].id
+  secret_string = random_password.admin[0].result
+}
+
 resource "aws_ecs_task_definition" "backend" {
   count = local.count
 
@@ -108,16 +131,25 @@ resource "aws_ecs_task_definition" "migrate" {
       name      = "migrate"
       image     = var.migrate_image
       essential = true
-      command   = ["sh", "-c", "npx prisma migrate deploy && node scripts/ensure-app-role.js"]
+      command   = ["sh", "-c", "npx prisma migrate deploy && node scripts/ensure-app-role.js && node scripts/ensure-admin.js"]
 
-      environment = [
-        { name = "APP_DB_USER", value = "app_user" },
-      ]
+      environment = concat(
+        [{ name = "APP_DB_USER", value = "app_user" }],
+        var.bootstrap_admin ? [
+          { name = "BOOTSTRAP_TENANT_SLUG", value = "admin" },
+          { name = "BOOTSTRAP_ADMIN_EMAIL", value = "admin@admin.com" },
+        ] : [],
+      )
 
-      secrets = [
-        { name = "DATABASE_URL", valueFrom = var.migration_database_url_secret_arn },
-        { name = "APP_DB_PASSWORD", valueFrom = var.app_db_password_secret_arn },
-      ]
+      secrets = concat(
+        [
+          { name = "DATABASE_URL", valueFrom = var.migration_database_url_secret_arn },
+          { name = "APP_DB_PASSWORD", valueFrom = var.app_db_password_secret_arn },
+        ],
+        var.bootstrap_admin ? [
+          { name = "BOOTSTRAP_ADMIN_PASSWORD", valueFrom = aws_secretsmanager_secret.admin[0].arn },
+        ] : [],
+      )
 
       logConfiguration = {
         logDriver = "awslogs"

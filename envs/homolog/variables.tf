@@ -103,3 +103,9 @@ variable "state_bucket" {
   type    = string
   default = ""
 }
+
+variable "bootstrap_admin" {
+  description = "Cria a conta admin na migração (senha em <project>/<env>/admin-password)"
+  type        = bool
+  default     = false
+}

@@ -148,3 +148,9 @@ variable "swagger_enabled" {
   type    = bool
   default = false
 }
+
+variable "bootstrap_admin" {
+  description = "Cria a conta admin (organização admin, admin@admin.com) na migração"
+  type        = bool
+  default     = false
+}
