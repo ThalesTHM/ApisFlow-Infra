@@ -109,3 +109,15 @@ variable "bootstrap_admin" {
   type        = bool
   default     = false
 }
+
+variable "monthly_budget_usd" {
+  description = "Orçamento mensal da conta em US$ (AWS Budgets, sem descontar créditos). 0 = sem orçamento"
+  type        = number
+  default     = 0
+}
+
+variable "activate_cost_tags" {
+  description = "Ativa Project e Environment como etiquetas de alocação de custos no Cost Explorer"
+  type        = bool
+  default     = false
+}
